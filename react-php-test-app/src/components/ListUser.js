@@ -5,9 +5,12 @@ import DataTable from 'react-data-table-component';
 import Button from '@mui/material/Button';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { CSVLink, CSVDownload } from "react-csv";
+import TextField from '@mui/material/TextField';
+import Container from '@mui/material/Container';
 
 export default function ListUser() {
     const [users, setUsers] = useState([]);
+    const [tempUsers, setTempUsers] = useState([]);
     const [csvUsers, setCsvUsers] = useState([]);
     const [inputs, setInputs] = useState([]);
 
@@ -19,6 +22,7 @@ export default function ListUser() {
         axios.get(process.env.REACT_APP_API_ENDPOINT).then(function (response) {
             console.log(response.data);
             setUsers(response.data);
+            setTempUsers(response.data);
 
             dataForExcel(response.data);
         });
@@ -57,9 +61,10 @@ export default function ListUser() {
         {
             name: 'Actions',
             sortable: false,
+            width: "200px",
             cell: (row) => (
                 <>
-                    <Button variant="outlined" onClick={() => deleteUser(row.id)}>Delete</Button>
+                    <Button sx={{ marginRight: 2 }} fullWidth variant="outlined" onClick={() => deleteUser(row.id)}>Delete</Button>
                     <Link to={`user/${row.id}/edit`} style={{ marginRight: "10px" }}>
                         <Button variant="outlined" >Edit</Button>
                     </Link>
@@ -88,35 +93,33 @@ export default function ListUser() {
 
         if (event.target.name === 'search') {
             console.log(event.target.value.length)
-            // if (event.target.value.length >= 3) {
+            if (event.target.value.length >= 3) {
 
                 let searchTerm = event.target.value;
 
                 let filteredData = users.filter(item => {
-                    // console.log('!isNaN', !isNaN(searchTerm))
-                    // console.log('Number.isInteger(searchTerm)', typeof(searchTerm))
-                    if(isNumber(searchTerm)) {
-                        console.log('true no')
-                        // results = contactlist.filter((item) => {
-                            return item.mobile.includes(searchTerm);
-                        // })
-                        // console.log('item',  typeof(item.mobile))
-                        // return item.mobile == 2121;
+                    if (isNumber(searchTerm)) {
 
-                    }  else {
-                        console.log('flae no')
+                    } else {
+
                     }
- 
-                    // if(/^[a-zA-Z]+$/.test(searchTerm)) {
-                    //     return item.name.toLowerCase().includes(searchTerm.toLowerCase());
-                    // }
+
+                    if (/^[a-zA-Z]+$/.test(searchTerm)) {
+                        return item.name.toLowerCase().includes(searchTerm.toLowerCase());
+                    }
 
                     // return false;
-                    
-                });
 
+                });
+                if (filteredData.length > 0) {
+                    setUsers(filteredData);
+                } else {
+                    setUsers(tempUsers);
+                }
                 console.log('filteredData', filteredData)
-            // }
+            } else {
+                setUsers(tempUsers);
+            }
         }
 
         function isNumber(n) {
@@ -126,48 +129,22 @@ export default function ListUser() {
 
     return (
         <div>
-
-            <DataTable
-                columns={columns}
-                data={users}
-                responsive={true}
-                pagination={true}
-                highlightOnHover={true}
-            />
-
-            <CSVLink data={csvUsers}><Button variant="outlined">Download</Button></CSVLink>
+            <Container fixed>
+                <TextField type="text" name="search" label="Search" onChange={handleChange} variant="standard" />
+                <br />
 
 
-            <input type="text" name="search" onChange={handleChange} />
+                <DataTable
+                    columns={columns}
+                    data={users}
+                    responsive={true}
+                    pagination={true}
+                    highlightOnHover={true}
+                />
 
+                <CSVLink data={csvUsers}><Button variant="outlined">Download Users</Button></CSVLink>
 
-            {/* <h1>List Users</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Mobile</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.map((user, key) =>
-                        <tr key={key}>
-                            <td>{user.id}</td>
-                            <td>{user.name}</td>
-                            <td>{user.email}</td>
-                            <td>{user.mobile}</td>
-                            <td>
-                                <Link to={`user/${user.id}/edit`} style={{ marginRight: "10px" }}>Edit</Link>
-                                <button onClick={() => deleteUser(user.id)}>Delete</button>
-                            </td>
-                        </tr>
-                    )}
-
-                </tbody>
-            </table> */}
+            </Container>
         </div>
     )
 }
